@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Office</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-dot"></div>
+        <div>
+          <div class="brand-title">AI Office</div>
+          <div class="brand-subtitle">Interactive multi-agent workspace</div>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="toggleDebugBtn" class="toolbar-btn" type="button">Debug: OFF</button>
+        <button id="toggleCaptureBtn" class="toolbar-btn" type="button">Capture: OFF</button>
+        <button id="copyPointsBtn" class="toolbar-btn" type="button">Copy Points</button>
+        <button id="exportPointsBtn" class="toolbar-btn" type="button">Export Points</button>
+        <button id="clearPointsBtn" class="toolbar-btn danger" type="button">Clear Points</button>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <section class="canvas-section">
+        <div class="canvas-card">
+          <div class="canvas-topline">
+            <div class="canvas-title-wrap">
+              <div class="canvas-title">Interactive Office Map</div>
+              <div class="canvas-subtitle" id="canvasHint">Наведи на зону или выбери агента</div>
+            </div>
+          </div>
+
+          <div class="canvas-wrap">
+            <canvas id="officeCanvas"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="agent-panel card">
+          <div class="agent-header">
+            <div class="agent-avatar" id="agentAvatar">AI</div>
+
+            <div class="agent-header-meta">
+              <div class="agent-name-row">
+                <div class="agent-name" id="agentName">Агент не выбран</div>
+                <span class="status-pill status-idle" id="agentStatus">idle</span>
+              </div>
+
+              <div class="agent-role" id="agentRole">Выбери агента на карте</div>
+              <div class="agent-tags">
+                <span class="tag" id="agentType">Unknown</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="agent-description" id="agentDescription">
+            Кликни по зоне на баннере, чтобы выбрать агента и начать с ним диалог.
+          </div>
+        </section>
+
+        <section class="agents-list-panel card">
+          <div class="panel-title-row">
+            <div>
+              <div class="panel-title">Agents</div>
+              <div class="panel-subtitle">Список всех доступных ролей</div>
+            </div>
+          </div>
+
+          <div id="agentList" class="agent-list"></div>
+        </section>
+
+        <section class="chat-panel card">
+          <div class="panel-title-row">
+            <div>
+              <div class="panel-title">Chat</div>
+              <div class="panel-subtitle" id="chatSubtitle">Активный агент не выбран</div>
+            </div>
+          </div>
+
+          <div class="chat-toolbar">
+            <button id="clearAgentChatBtn" class="toolbar-btn small" type="button" disabled>
+              Clear Agent
+            </button>
+            <button id="clearAllChatsBtn" class="toolbar-btn small danger" type="button">
+              Clear All
+            </button>
+            <button id="exportAgentChatBtn" class="toolbar-btn small" type="button" disabled>
+              Export Agent
+            </button>
+            <button id="exportAllChatsBtn" class="toolbar-btn small" type="button">
+              Export All
+            </button>
+          </div>
+
+          <div id="messages" class="messages"></div>
+
+          <div class="input-area">
+            <textarea
+              id="userInput"
+              class="chat-input"
+              placeholder="Напиши сообщение агенту..."
+              rows="4"
+            ></textarea>
+
+            <button id="sendBtn" class="send-btn" type="button" disabled>
+              Отправить
+            </button>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
