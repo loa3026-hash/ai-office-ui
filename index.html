@@ -1,92 +1,266 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Office</title>
-
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
-
   <style>
-    body {
+    html, body {
       margin: 0;
-      background: #1e1e1e;
+      padding: 0;
+      overflow: hidden;
+      background: #1b1b1b;
+      font-family: Arial, sans-serif;
     }
 
-    #chat {
-      position: fixed;
-      right: 0;
+    #game {
+      position: absolute;
+      left: 0;
       top: 0;
-      width: 300px;
-      height: 100%;
-      background: #111;
-      color: white;
-      padding: 10px;
-      overflow-y: auto;
-      font-family: Arial;
     }
 
-    #input {
+    #chat-panel {
       position: fixed;
+      top: 0;
       right: 0;
-      bottom: 0;
-      width: 300px;
+      width: 320px;
+      height: 100vh;
+      background: #111827;
+      color: white;
+      border-left: 2px solid #2b3648;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    #chat-header {
+      padding: 14px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #0f172a;
+      border-bottom: 1px solid #243041;
+    }
+
+    #chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .msg {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      background: #1d4ed8;
+    }
+
+    .agent {
+      background: #374151;
+    }
+
+    #chat-controls {
+      padding: 10px;
+      border-top: 1px solid #243041;
+      background: #0f172a;
+    }
+
+    #chat-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    #send-btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #22c55e;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #send-btn:hover {
+      background: #16a34a;
+    }
+
+    #hint {
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      z-index: 11;
+      font-size: 14px;
     }
   </style>
 </head>
-
 <body>
+  <div id="game"></div>
 
-<div id="chat"></div>
-<input id="input" placeholder="Напиши агенту..." />
+  <div id="chat-panel">
+    <div id="chat-header">🤖 Агент офиса</div>
+    <div id="chat-messages">
+      <div class="msg agent">Нажми на агента в офисе или напиши сообщение ниже.</div>
+    </div>
+    <div id="chat-controls">
+      <input id="chat-input" type="text" placeholder="Напиши агенту..." />
+      <button id="send-btn">Отправить</button>
+    </div>
+  </div>
 
-<script>
-const config = {
-  type: Phaser.AUTO,
-  width: window.innerWidth - 300,
-  height: window.innerHeight,
-  scene: {
-    preload,
-    create
-  }
-};
+  <div id="hint">Кликни по агенту в офисе</div>
 
-const game = new Phaser.Game(config);
+  <script>
+    const API_URL = "https://ai-business-os-1.onrender.com/chat";
 
-function preload() {
-  this.load.image('office', 'https://i.imgur.com/8QZ7Z6E.png');
-  this.load.image('agent', 'https://i.imgur.com/4AiXzf8.png');
-}
+    function addMessage(text, role) {
+      const box = document.getElementById("chat-messages");
+      const div = document.createElement("div");
+      div.className = "msg " + role;
+      div.textContent = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
 
-function create() {
-  this.add.image(400, 300, 'office');
+    async function askAgent(text) {
+      addMessage("Ты: " + text, "user");
 
-  const agent = this.add.image(300, 300, 'agent').setInteractive();
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
 
-  agent.on('pointerdown', () => {
-    sendMessage("Придумай 3 бизнес идеи");
-  });
-}
+        const data = await res.json();
 
-async function sendMessage(text) {
-  addMessage("Ты: " + text);
+        if (data.answer) {
+          addMessage("Агент: " + data.answer, "agent");
+        } else {
+          addMessage("Агент: Ошибка ответа сервера", "agent");
+        }
+      } catch (e) {
+        addMessage("Агент: Не удалось связаться с сервером", "agent");
+      }
+    }
 
-  const res = await fetch("https://ai-business-os-1.onrender.com/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ text })
-  });
+    document.getElementById("send-btn").addEventListener("click", () => {
+      const input = document.getElementById("chat-input");
+      const text = input.value.trim();
+      if (!text) return;
+      askAgent(text);
+      input.value = "";
+    });
 
-  const data = await res.json();
+    document.getElementById("chat-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("send-btn").click();
+      }
+    });
 
-  addMessage("AI: " + data.answer);
-}
+    const panelWidth = 320;
+    const gameWidth = window.innerWidth - panelWidth;
+    const gameHeight = window.innerHeight;
 
-function addMessage(msg) {
-  const chat = document.getElementById("chat");
-  chat.innerHTML += "<div>" + msg + "</div>";
-}
-</script>
+    const config = {
+      type: Phaser.AUTO,
+      parent: "game",
+      width: gameWidth,
+      height: gameHeight,
+      backgroundColor: "#2a2a2a",
+      scene: {
+        create: create
+      }
+    };
 
+    new Phaser.Game(config);
+
+    function create() {
+      const scene = this;
+
+      drawOffice(scene);
+
+      const agent = scene.add.rectangle(260, 240, 36, 48, 0x4ade80)
+        .setStrokeStyle(2, 0xffffff)
+        .setInteractive({ useHandCursor: true });
+
+      scene.add.text(230, 210, "AI", {
+        fontSize: "16px",
+        color: "#ffffff",
+        fontStyle: "bold"
+      });
+
+      scene.add.text(205, 295, "Product Agent", {
+        fontSize: "14px",
+        color: "#ffffff",
+        backgroundColor: "#00000088",
+        padding: { x: 4, y: 2 }
+      });
+
+      agent.on("pointerdown", () => {
+        askAgent("Придумай 3 идеи товара для дропшиппинга");
+      });
+    }
+
+    function drawOffice(scene) {
+      scene.add.rectangle(0, 0, gameWidth * 2, gameHeight * 2, 0x3b2f2f).setOrigin(0);
+
+      // пол
+      for (let y = 0; y < gameHeight; y += 40) {
+        scene.add.line(0, 0, 0, y, gameWidth, y, 0x4a3a3a).setOrigin(0);
+      }
+
+      // стены
+      scene.add.rectangle(gameWidth / 2, 40, gameWidth, 80, 0x2b2330);
+      scene.add.rectangle(80, 180, 100, 140, 0x5b4636);   // шкаф
+      scene.add.rectangle(540, 160, 150, 100, 0x6b4f3a); // полка
+      scene.add.rectangle(520, 360, 170, 110, 0x4b3a2c); // стол переговоров
+
+      // окна
+      scene.add.rectangle(240, 70, 90, 60, 0xf59e0b);
+      scene.add.rectangle(360, 70, 90, 60, 0xf59e0b);
+
+      // столы
+      drawDesk(scene, 210, 240);
+      drawDesk(scene, 360, 240);
+      drawDesk(scene, 210, 380);
+      drawDesk(scene, 360, 380);
+
+      // декор
+      scene.add.circle(100, 100, 12, 0xfacc15);
+      scene.add.circle(460, 110, 12, 0xfacc15);
+      scene.add.circle(620, 120, 12, 0xfacc15);
+
+      // растения
+      drawPlant(scene, 140, 470);
+      drawPlant(scene, 610, 470);
+    }
+
+    function drawDesk(scene, x, y) {
+      scene.add.rectangle(x, y, 110, 60, 0x8b5e3c);
+      scene.add.rectangle(x, y - 20, 35, 20, 0x222222); // монитор
+      scene.add.rectangle(x, y + 40, 70, 8, 0x5b3d26); // ноги
+    }
+
+    function drawPlant(scene, x, y) {
+      scene.add.rectangle(x, y, 22, 22, 0x8b5a2b);
+      scene.add.circle(x, y - 18, 16, 0x22c55e);
+    }
+  </script>
 </body>
 </html>
