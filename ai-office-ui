@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Office</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #1e1e1e;
+    }
+
+    #chat {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 300px;
+      height: 100%;
+      background: #111;
+      color: white;
+      padding: 10px;
+      overflow-y: auto;
+      font-family: Arial;
+    }
+
+    #input {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      width: 300px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="chat"></div>
+<input id="input" placeholder="Напиши агенту..." />
+
+<script>
+const config = {
+  type: Phaser.AUTO,
+  width: window.innerWidth - 300,
+  height: window.innerHeight,
+  scene: {
+    preload,
+    create
+  }
+};
+
+const game = new Phaser.Game(config);
+
+function preload() {
+  this.load.image('office', 'https://i.imgur.com/8QZ7Z6E.png');
+  this.load.image('agent', 'https://i.imgur.com/4AiXzf8.png');
+}
+
+function create() {
+  this.add.image(400, 300, 'office');
+
+  const agent = this.add.image(300, 300, 'agent').setInteractive();
+
+  agent.on('pointerdown', () => {
+    sendMessage("Придумай 3 бизнес идеи");
+  });
+}
+
+async function sendMessage(text) {
+  addMessage("Ты: " + text);
+
+  const res = await fetch("https://ai-business-os-1.onrender.com/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ text })
+  });
+
+  const data = await res.json();
+
+  addMessage("AI: " + data.answer);
+}
+
+function addMessage(msg) {
+  const chat = document.getElementById("chat");
+  chat.innerHTML += "<div>" + msg + "</div>";
+}
+</script>
+
+</body>
+</html>
